@@ -17,6 +17,9 @@
     "engines": {
         "vscode": "^1.80.0"
     },
+    "keywords": [
+        "svn"
+    ],
     "categories": [
         "Other"
     ],
@@ -25,7 +28,6 @@
     ],
     "main": "./dist/extension.js",
     "contributes": {
-        "resourceLabelFormatters": [],
         "configuration": [
             {
                 "id": "current-line-blame",
