@@ -1,0 +1,108 @@
+{
+    "name": "vscode-svnlens",
+    "displayName": "SVN Lens",
+    "description": "Blame and other",
+    "publisher": "ZaikinDenis",
+    "author": {
+        "name": "Zaikin Denis",
+        "email": "devprodest@gmail.com",
+        "url": "https://cdeblog.ru"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://gitlab.com/devprodest/vscode-svnlens.git"
+    },
+    "icon": "assets/vscode-svnlens.png",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "resourceLabelFormatters": [],
+        "configuration": [
+            {
+                "id": "current-line-blame",
+                "title": "Inline Blame",
+                "order": 10,
+                "properties": {
+                    "svnlens.currentLine.enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "scope": "window",
+                        "order": 10
+                    },
+                    "svnlens.currentLine.updateTimout": {
+                        "type": "number",
+                        "default": 1000,
+                        "markdownDescription": "Blame update delay timeout when editing a document",
+                        "scope": "window",
+                        "order": 15
+                    },
+                    "svnlens.currentLine.format": {
+                        "type": "string",
+                        "default": "${author}, ${date} • ⧟r${revision}",
+                        "markdownDescription": "Specifies the format of the inline blame annotation. Date formatting is controlled by the `#svnlens.currentLine.dateFormat#` setting",
+                        "scope": "window",
+                        "order": 20
+                    },
+                    "svnlens.currentLine.dateFormat": {
+                        "type": "string",
+                        "default": "ll",
+                        "markdownDescription": "Specifies how to format absolute dates (e.g. using the `${date}` token) for the cinline blame annotation. See the dayjs docs for supported formats",
+                        "scope": "window",
+                        "order": 30
+                    }
+                }
+            }
+        ],
+        "colors": [
+            {
+                "id": "svnlens.blameForegroundColor",
+                "description": "Text color for blame line",
+                "defaults": {
+                    "dark": "#99999959",
+                    "light": "#55555580",
+                    "highContrast": "#ff0000",
+                    "highContrastLight": "#0000FF"
+                }
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "compile-tests": "tsc -p . --outDir out",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "npm run compile-tests && npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^8.1.0",
+        "@types/mocha": "^10.0.1",
+        "@types/node": "20.2.5",
+        "@types/vscode": "^1.80.0",
+        "@typescript-eslint/eslint-plugin": "^5.59.8",
+        "@typescript-eslint/parser": "^5.59.8",
+        "@vscode/test-electron": "^2.3.2",
+        "eslint": "^8.41.0",
+        "glob": "^8.1.0",
+        "mocha": "^10.2.0",
+        "ts-loader": "^9.4.3",
+        "typescript": "^5.1.3",
+        "webpack": "^5.85.0",
+        "webpack-cli": "^5.1.1"
+    },
+    "dependencies": {
+        "dayjs": "^1.11.9"
+    }
+}
