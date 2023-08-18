@@ -13,7 +13,7 @@
         "url": "https://gitlab.com/devprodest/vscode-svnlens.git"
     },
     "icon": "assets/vscode-svnlens.png",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -24,7 +24,7 @@
         "Other"
     ],
     "activationEvents": [
-        "*"
+        "onStartupFinished"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -75,7 +75,22 @@
                     "highContrastLight": "#0000FF"
                 }
             }
-        ]
+        ],
+        "commands": [
+            {
+                "command": "svnlens.updateBlame",
+                "title": "Update SVN Blame",
+                "category": "SVN"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "svnlens.updateBlame",
+                    "when": "true"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run package",

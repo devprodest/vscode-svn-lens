@@ -1,14 +1,13 @@
 
 import { execSync } from "child_process";
-import * as vscode from 'vscode';
-import { Color, ThemeColor, workspace, ExtensionContext, window } from 'vscode';
-
+import { ThemeColor, workspace, ExtensionContext, window, Uri, commands, Range, Position } from 'vscode';
 import * as dayjs from 'dayjs';
 import * as localizedFormat from 'dayjs/plugin/localizedFormat';
 dayjs.extend(localizedFormat);
 
-let doc = "";
+
 const svnBlameDecoration = window.createTextEditorDecorationType({});
+let doc = "";
 
 let enabled: boolean | undefined;
 let dateFormat: string;
@@ -35,12 +34,17 @@ const getBlameline = (line: string) => {
 
 
 
-const blameExec = (path: string): string[] => {
+const blameExec = (file: Uri): string[] => {
 	let blame: string[] = [];
-	if (doc !== path) {
+	if (doc !== file.fsPath) {
 		try {
-			doc = path;
-			blame = execSync('svn blame -v ' + path).toString().split("\n");
+			const rootPath = workspace.getWorkspaceFolder(file)?.uri.fsPath || ".";
+			doc = file.fsPath;
+
+			console.log(rootPath);
+			console.log(workspace.asRelativePath(file));
+
+			blame = execSync('svn blame -v ' + workspace.asRelativePath(file), { cwd: rootPath }).toString().split("\n");
 		}
 		catch (error) {
 		}
@@ -57,27 +61,40 @@ const getConfig = () => {
 
 
 export function activate(context: ExtensionContext) {
+	let lines: string[] = [];
+
 	getConfig();
 
-	let lines: string[] = [];
+	/** */
+
+	const command = 'svnlens.updateBlame';
+	const updateBlame = commands.registerCommand(command, async () => {
+		if (window.activeTextEditor) {
+			lines = blameExec(window.activeTextEditor.document.uri);
+		}
+	});
+	context.subscriptions.push(updateBlame);
+
+	/** */
 
 	workspace.onDidChangeConfiguration(ev => {
 		getConfig();
 	});
 
-	let timeout: NodeJS.Timeout;
 
 	window.onDidChangeActiveTextEditor(ev => {
 		if (ev) {
-			lines = blameExec(ev.document.uri.path);
+			lines = blameExec(ev.document.uri);
 		}
 	});
 
+
+	let timeout: NodeJS.Timeout;
 	workspace.onDidChangeTextDocument(ev => {
 		clearTimeout(timeout);
 		timeout = setTimeout(() => {
 			doc = "";
-			lines = blameExec(ev.document.uri.path);
+			lines = blameExec(ev.document.uri);
 
 		}, updateTimout);
 	});
@@ -86,7 +103,7 @@ export function activate(context: ExtensionContext) {
 		if (enabled) {
 
 			const lightColor = new ThemeColor("svnlens.blameForegroundColor");
-			const path = ev.textEditor.document.uri.path;
+			const path = ev.textEditor.document.uri;
 
 			if (lines.length === 0) {
 				lines = blameExec(path);
@@ -105,17 +122,15 @@ export function activate(context: ExtensionContext) {
 						light: { after: { color: lightColor } },
 						dark: { after: { color: lightColor } }
 					},
-					range: new vscode.Range(
-						new vscode.Position(line, 1024),
-						new vscode.Position(line, 1024),
+					range: new Range(
+						new Position(line, 1024),
+						new Position(line, 1024),
 					),
 				};
 			})
 			);
 		}
 	});
-
-
 }
 
 export function deactivate() { }
