@@ -13,9 +13,9 @@
         "url": "https://gitlab.com/devprodest/vscode-svnlens.git"
     },
     "icon": "assets/vscode-svnlens.png",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "engines": {
-        "vscode": "^1.80.0"
+        "vscode": "^1.70.0"
     },
     "keywords": [
         "svn"

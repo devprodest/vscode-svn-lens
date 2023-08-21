@@ -41,10 +41,7 @@ const blameExec = (file: Uri): string[] => {
 			const rootPath = workspace.getWorkspaceFolder(file)?.uri.fsPath || ".";
 			doc = file.fsPath;
 
-			console.log(rootPath);
-			console.log(workspace.asRelativePath(file));
-
-			blame = execSync('svn blame -v ' + workspace.asRelativePath(file), { cwd: rootPath }).toString().split("\n");
+			blame = execSync('svn blame -v ' + workspace.asRelativePath(file, false), { cwd: rootPath }).toString().split("\n");
 		}
 		catch (error) {
 		}
@@ -101,6 +98,7 @@ export function activate(context: ExtensionContext) {
 
 	window.onDidChangeTextEditorSelection(ev => {
 		if (enabled) {
+			if (ev.textEditor.document.isDirty) { return; }
 
 			const lightColor = new ThemeColor("svnlens.blameForegroundColor");
 			const path = ev.textEditor.document.uri;
@@ -112,7 +110,6 @@ export function activate(context: ExtensionContext) {
 
 			ev.textEditor.setDecorations(svnBlameDecoration, ev?.selections.map(x => {
 				const line = x.active.line;
-
 				return {
 					renderOptions: {
 						after: {

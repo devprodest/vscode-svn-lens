@@ -6,4 +6,8 @@
 
 ## 0.0.2
 
-- working in Windows
+- Working in Windows
+
+## 0.0.3
+
+- Now works in multifolder wokspace
