@@ -16,7 +16,7 @@ let updateTimout: number;
 
 
 const getBlameline = (line: string) => {
-	const matchRegex: RegExp = RegExp(/ *(\d+) +(\w+) +(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4} \(.*\d\)) +(.*)/g);
+	const matchRegex: RegExp = RegExp(/ *(\d+) +([\.\w]+) +(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4} \(.*\d\)) +(.*)/g);
 	const defMatch = line.matchAll(matchRegex).next().value;
 
 	if (defMatch) {
@@ -98,7 +98,10 @@ export function activate(context: ExtensionContext) {
 
 	window.onDidChangeTextEditorSelection(ev => {
 		if (enabled) {
-			if (ev.textEditor.document.isDirty) { return; }
+			if (ev.textEditor.document.isDirty) {
+				ev.textEditor.setDecorations(svnBlameDecoration, []);
+				return;
+			}
 
 			const lightColor = new ThemeColor("svnlens.blameForegroundColor");
 			const path = ev.textEditor.document.uri;
