@@ -13,7 +13,7 @@
         "url": "https://gitlab.com/devprodest/vscode-svnlens.git"
     },
     "icon": "assets/vscode-svnlens.png",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "engines": {
         "vscode": "^1.70.0"
     },
