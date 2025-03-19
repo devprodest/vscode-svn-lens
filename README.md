@@ -1,3 +1,7 @@
+[![](https://vsmarketplacebadges.dev/version-short/ZaikinDenis.vscode-svnlens.svg)](https://marketplace.visualstudio.com/items?itemName=ZaikinDenis.vscode-svnlens)
+[![](https://vsmarketplacebadges.dev/downloads-short/ZaikinDenis.vscode-svnlens.svg)](https://marketplace.visualstudio.com/items?itemName=ZaikinDenis.vscode-svnlens)
+[![](https://vsmarketplacebadges.dev/rating-short/ZaikinDenis.vscode-svnlens.svg)](https://marketplace.visualstudio.com/items?itemName=ZaikinDenis.vscode-svnlens)
+
 # SVN Lens
 
 ## Функционал
