@@ -9,11 +9,15 @@
         "url": "https://cdeblog.ru"
     },
     "repository": {
-        "type": "git",
-        "url": "https://gitlab.com/devprodest/vscode-svnlens.git"
+        "type": "github",
+        "url": "https://github.com/devprodest/vscode-svn-lens.git"
     },
+    "bugs": {
+      "url": "https://github.com/devprodest/vscode-svn-lens/issues"
+    },
+    "homepage": "https://github.com/devprodest/vscode-svn-lens#readme",
     "icon": "assets/vscode-svnlens.png",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "engines": {
         "vscode": "^1.85.0"
     },
