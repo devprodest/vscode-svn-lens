@@ -13,9 +13,9 @@
         "url": "https://gitlab.com/devprodest/vscode-svnlens.git"
     },
     "icon": "assets/vscode-svnlens.png",
-    "version": "0.0.4",
+    "version": "1.0.0",
     "engines": {
-        "vscode": "^1.70.0"
+        "vscode": "^1.85.0"
     },
     "keywords": [
         "svn"
@@ -39,13 +39,6 @@
                         "default": true,
                         "scope": "window",
                         "order": 10
-                    },
-                    "svnlens.currentLine.updateTimout": {
-                        "type": "number",
-                        "default": 1000,
-                        "markdownDescription": "Blame update delay timeout when editing a document",
-                        "scope": "window",
-                        "order": 15
                     },
                     "svnlens.currentLine.format": {
                         "type": "string",
@@ -101,17 +94,19 @@
         "watch-tests": "tsc -p . -w --outDir out",
         "pretest": "npm run compile-tests && npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "vscode:build": "vsce package",
+        "vscode:publish": "vsce publish"
     },
     "devDependencies": {
         "@types/glob": "^8.1.0",
         "@types/mocha": "^10.0.1",
         "@types/node": "20.2.5",
         "@types/vscode": "^1.70.0",
-        "@typescript-eslint/eslint-plugin": "^5.59.8",
-        "@typescript-eslint/parser": "^5.59.8",
+        "@typescript-eslint/eslint-plugin": "^8.31.1",
+        "@typescript-eslint/parser": "^8.31.1",
         "@vscode/test-electron": "^2.3.2",
-        "eslint": "^8.41.0",
+        "eslint": "^9.26.0",
         "glob": "^8.1.0",
         "mocha": "^10.2.0",
         "ts-loader": "^9.4.3",
@@ -120,6 +115,7 @@
         "webpack-cli": "^5.1.1"
     },
     "dependencies": {
-        "dayjs": "^1.11.9"
+        "dayjs": "^1.11.9",
+        "xml-js": "^1.6.11"
     }
 }

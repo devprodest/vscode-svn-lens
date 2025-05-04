@@ -1,136 +1,94 @@
 
-import { execSync } from "child_process";
-import { ThemeColor, workspace, ExtensionContext, window, Uri, commands, Range, Position } from 'vscode';
-import * as dayjs from 'dayjs';
+import { ThemeColor, workspace, ExtensionContext, window, commands, Range, Position, Uri, DecorationOptions } from 'vscode';
+import { getCommitInfo } from "./helpers/CommitInfo";
+import { blameLines, updateBlameInfo } from "./helpers/BlameInfo";
+
+
+
 import * as localizedFormat from 'dayjs/plugin/localizedFormat';
+import * as dayjs from 'dayjs';
 dayjs.extend(localizedFormat);
+
+export function dataFormater(date: string) {
+    return dayjs(date).format(dateFormat);
+}
 
 
 const svnBlameDecoration = window.createTextEditorDecorationType({});
-let doc = "";
 
-let enabled: boolean | undefined;
-let dateFormat: string;
-let blameFormat: string;
-let updateTimout: number;
+let dateFormat: string = "";
+export let blameFormat: string = "";
 
-
-const getBlameline = (line: string) => {
-	const matchRegex: RegExp = RegExp(/ *(\d+) +([\.\w]+) +(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4} \(.*\d\)) +(.*)/g);
-	const defMatch = line.matchAll(matchRegex).next().value;
-
-	if (defMatch) {
-		const revision = defMatch[1];
-		const author = defMatch[2];
-		const date = dayjs(defMatch[3]).format(dateFormat);
-
-		return blameFormat
-			.replace(/(\$\{\s*author\s*\})/, author)
-			.replace(/(\$\{\s*date\s*\})/, date)
-			.replace(/(\$\{\s*revision\s*\})/, revision);
-	}
-	return "Unposted change";
-};
-
-
-
-const blameExec = (file: Uri): string[] => {
-	let blame: string[] = [];
-	if (doc !== file.fsPath) {
-		try {
-			const rootPath = workspace.getWorkspaceFolder(file)?.uri.fsPath || ".";
-			doc = file.fsPath;
-
-			blame = execSync('svn blame -v ' + workspace.asRelativePath(file, false), { cwd: rootPath }).toString().split("\n");
-		}
-		catch (error) {
-		}
-	}
-	return blame.map(x => getBlameline(x));
-};
 
 const getConfig = () => {
-	enabled = workspace.getConfiguration().get("svnlens.currentLine.enabled");
-	dateFormat = workspace.getConfiguration().get("svnlens.currentLine.dateFormat") ?? "ll";
-	blameFormat = workspace.getConfiguration().get("svnlens.currentLine.format") ?? "${author}, ${date} • ⧟r${revision}";
-	updateTimout = workspace.getConfiguration().get("svnlens.currentLine.updateTimout") ?? 1000;
+    dateFormat = workspace.getConfiguration().get("svnlens.currentLine.dateFormat") ?? "ll";
+    blameFormat = workspace.getConfiguration().get("svnlens.currentLine.format") ?? "${author}, ${date} • ⧟r${revision}";
 };
 
 
 export function activate(context: ExtensionContext) {
-	let lines: string[] = [];
+    getConfig();
 
-	getConfig();
+    /** */
 
-	/** */
+    const updateBlame = commands.registerCommand('svnlens.updateBlame', async () => {
+        if (window.activeTextEditor) {
+            updateBlameInfo(context, window.activeTextEditor.document.uri);
+        }
+    });
+    context.subscriptions.push(updateBlame);
 
-	const command = 'svnlens.updateBlame';
-	const updateBlame = commands.registerCommand(command, async () => {
-		if (window.activeTextEditor) {
-			lines = blameExec(window.activeTextEditor.document.uri);
-		}
-	});
-	context.subscriptions.push(updateBlame);
+    /** */
 
-	/** */
+    workspace.onDidChangeConfiguration(() => getConfig());
 
-	workspace.onDidChangeConfiguration(ev => {
-		getConfig();
-	});
+    window.onDidChangeActiveTextEditor(async (ev) => { if (ev) { updateBlameInfo(context, ev.document.uri); } });
 
 
-	window.onDidChangeActiveTextEditor(ev => {
-		if (ev) {
-			lines = blameExec(ev.document.uri);
-		}
-	});
+    const decoratorPrepare = (nline: number, path: Uri, color: ThemeColor) : DecorationOptions => {
+
+        if(blameLines[nline] === undefined ) return {} as DecorationOptions;
+
+        return {
+            renderOptions: {
+                after: {
+                    contentText: blameLines[nline].text,
+                    margin: "2rem",
+                },
+                light: { after: { color: color } },
+                dark: { after: { color: color } }
+            },
+            hoverMessage: getCommitInfo(context, blameLines[nline].revision, path),
+            range: new Range(
+                new Position(nline, Number.MAX_VALUE),
+                new Position(nline, Number.MAX_VALUE),
+            ),
+        };
+    };
 
 
-	let timeout: NodeJS.Timeout;
-	workspace.onDidChangeTextDocument(ev => {
-		clearTimeout(timeout);
-		timeout = setTimeout(() => {
-			doc = "";
-			lines = blameExec(ev.document.uri);
+    window.onDidChangeTextEditorSelection(async (ev) => {
+        if (ev.textEditor.document.isDirty) {
+            ev.textEditor.setDecorations(svnBlameDecoration, []);
+            return;
+        }
 
-		}, updateTimout);
-	});
+        const path = ev.textEditor.document.uri;
 
-	window.onDidChangeTextEditorSelection(ev => {
-		if (enabled) {
-			if (ev.textEditor.document.isDirty) {
-				ev.textEditor.setDecorations(svnBlameDecoration, []);
-				return;
-			}
+        if (blameLines.length === 0) {
+            updateBlameInfo(context, path);
+        }
 
-			const lightColor = new ThemeColor("svnlens.blameForegroundColor");
-			const path = ev.textEditor.document.uri;
+        if (blameLines.length > 0) {
+            const lightColor = new ThemeColor("svnlens.blameForegroundColor");
 
-			if (lines.length === 0) {
-				lines = blameExec(path);
-			}
-
-
-			ev.textEditor.setDecorations(svnBlameDecoration, ev?.selections.map(x => {
-				const line = x.active.line;
-				return {
-					renderOptions: {
-						after: {
-							contentText: lines[line],
-							margin: "2rem",
-						},
-						light: { after: { color: lightColor } },
-						dark: { after: { color: lightColor } }
-					},
-					range: new Range(
-						new Position(line, 1024),
-						new Position(line, 1024),
-					),
-				};
-			})
-			);
-		}
-	});
+            ev.textEditor.setDecorations(
+                svnBlameDecoration,
+                ev?.selections.map((x) => decoratorPrepare(x.active.line, path, lightColor))
+            );
+        }
+    });
 }
+
 
 export function deactivate() { }

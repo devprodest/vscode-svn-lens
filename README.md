@@ -4,9 +4,9 @@
 
 # SVN Lens
 
-## Функционал
+## Features
 
-Построчная информация об изменениях файла
+Line-by-line information about file changes
 
 ![Alt text](assets/blame1.png)
 
