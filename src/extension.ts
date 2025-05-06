@@ -1,7 +1,7 @@
 
 import { ThemeColor, workspace, ExtensionContext, window, commands, Range, Position, Uri, DecorationOptions } from 'vscode';
 import { getCommitInfo } from "./helpers/CommitInfo";
-import { blameLines, updateBlameInfo } from "./helpers/BlameInfo";
+import { blameLines, resetFileName, updateBlameInfo } from "./helpers/BlameInfo";
 
 
 
@@ -45,10 +45,7 @@ export function activate(context: ExtensionContext) {
     window.onDidChangeActiveTextEditor(async (ev) => { if (ev) { updateBlameInfo(context, ev.document.uri); } });
 
 
-    const decoratorPrepare = (nline: number, path: Uri, color: ThemeColor) : DecorationOptions => {
-
-        if(blameLines[nline] === undefined ) return {} as DecorationOptions;
-
+    const decoratorPrepare = (nline: number, path: Uri, color: ThemeColor): DecorationOptions => {
         return {
             renderOptions: {
                 after: {
@@ -67,6 +64,18 @@ export function activate(context: ExtensionContext) {
     };
 
 
+    let timeout: NodeJS.Timeout;
+    workspace.onDidChangeTextDocument(ev => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if (!ev.document.isDirty) {
+                resetFileName();
+                updateBlameInfo(context, ev.document.uri);
+            }
+        }, 1000);
+    });
+
+
     window.onDidChangeTextEditorSelection(async (ev) => {
         if (ev.textEditor.document.isDirty) {
             ev.textEditor.setDecorations(svnBlameDecoration, []);
@@ -82,10 +91,15 @@ export function activate(context: ExtensionContext) {
         if (blameLines.length > 0) {
             const lightColor = new ThemeColor("svnlens.blameForegroundColor");
 
-            ev.textEditor.setDecorations(
-                svnBlameDecoration,
-                ev?.selections.map((x) => decoratorPrepare(x.active.line, path, lightColor))
-            );
+
+            const options = ev.textEditor.selections.map((x) => {
+                const lineNumber = x.active.line;
+                return decoratorPrepare(lineNumber, path, lightColor)
+            }) ?? [];
+
+            console.log(options);
+
+            ev.textEditor.setDecorations(svnBlameDecoration, options);
         }
     });
 }

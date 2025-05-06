@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.0.2
+
+- Fixed a bug for unversioned lines. The code for this was lost in an update.
+- Fixed an empty last line bug. svn blame doesn't show it. Added a stub "Last empty line is missing from blame"
+
 
 ## 1.0.1
 

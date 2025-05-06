@@ -17,7 +17,7 @@
     },
     "homepage": "https://github.com/devprodest/vscode-svn-lens#readme",
     "icon": "assets/vscode-svnlens.png",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "engines": {
         "vscode": "^1.85.0"
     },

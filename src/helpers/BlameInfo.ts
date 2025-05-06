@@ -4,7 +4,7 @@ import { dataFormater as dataFormatter, blameFormat } from "../extension";
 import { xmlToObject } from '../utils';
 import { updateRepoInfo } from "./RepoInfo";
 
-export { blameLines, updateBlameInfo };
+export { blameLines, updateBlameInfo, resetFileName };
 
 
 type BlameXMLInfo = {
@@ -26,42 +26,53 @@ type BlameInfo = {
 
 
 let blameLines: BlameInfo[] = [];
+let fileName: string = "";
 
+const resetFileName = () => fileName = "";
 
 const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
-    const rootPath = workspace.getWorkspaceFolder(file)?.uri.fsPath || ".";
     const filePath = workspace.asRelativePath(file, false);
 
-    console.log("file", filePath);
+    if (filePath !== fileName) {
+        fileName = filePath;
 
-    updateRepoInfo(filePath, rootPath, context);
+        console.log("file", filePath);
 
-    try {
+        const rootPath = workspace.getWorkspaceFolder(file)?.uri.fsPath || ".";
+        updateRepoInfo(filePath, rootPath, context);
 
-        const blameXML = execSync(`svn blame --xml "${filePath}"`, { cwd: rootPath }).toString();
-        const entry: BlameXMLInfo[] = xmlToObject<any>(blameXML).blame.target.entry;
+        try {
 
-        console.log("blame lines", entry);
+            const blameXML = execSync(`svn blame --xml "${filePath}"`, { cwd: rootPath }).toString();
+            const entry: BlameXMLInfo[] = xmlToObject<any>(blameXML)?.blame?.target?.entry ?? [];
 
-        blameLines = entry.map(x => {
+            console.log("blame lines", entry);
 
-            const date = dataFormatter(x.commit.date._text);
-            const author = x.commit.author._text;
+            blameLines = entry.map(x => {
 
-            return {
-                author,
-                date,
-                revision: x.commit._attributes.revision,
-                nline: x._attributes["line-number"],
-                text: blameFormat
-                    .replace(/(\$\{\s*author\s*\})/, author)
-                    .replace(/(\$\{\s*date\s*\})/, date)
-                    .replace(/(\$\{\s*revision\s*\})/, x.commit._attributes.revision),
-            };
-        });
+                if (x.commit === undefined) return {text: "Uncommitted changes"} as BlameInfo;
+
+                const date = dataFormatter(x.commit.date._text);
+                const author = x.commit.author._text;
+
+                return {
+                    author,
+                    date,
+                    revision: x.commit._attributes.revision,
+                    nline: x._attributes["line-number"],
+                    text: blameFormat
+                        .replace(/(\$\{\s*author\s*\})/, author)
+                        .replace(/(\$\{\s*date\s*\})/, date)
+                        .replace(/(\$\{\s*revision\s*\})/, x.commit._attributes.revision),
+                };
+            });
+
+            blameLines.push({
+                text: "Last empty line is missing from blame",
+            } as BlameInfo);
+        }
+        catch (error: Error | any) { console.error(error); }
     }
-    catch (error: Error | any) { console.error(error); }
-
 };
 
 

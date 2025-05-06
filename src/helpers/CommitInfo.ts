@@ -52,7 +52,8 @@ const readCommitInfo = (rev: string, file: Uri) => {
 };
 
 
-const getCommitInfo = (context: ExtensionContext, rev: string, file: Uri): MarkdownString => {
+const getCommitInfo = (context: ExtensionContext, rev: string, file: Uri): MarkdownString | string => {
+    if (rev === undefined) return "Uncommitted changes";
 
     if (commitsInfo[rev] === undefined) {
         console.log("read info", rev);
