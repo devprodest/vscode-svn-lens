@@ -3,10 +3,12 @@ import { ThemeColor, workspace, ExtensionContext, window, commands, Range, Posit
 import { getCommitInfo } from "./helpers/CommitInfo";
 import { blameLines, resetFileName, updateBlameInfo } from "./helpers/BlameInfo";
 
-
-
 import * as localizedFormat from 'dayjs/plugin/localizedFormat';
 import * as dayjs from 'dayjs';
+import { fileExists } from './helpers/FShelper';
+import * as logger from "./helpers/logger";
+
+
 dayjs.extend(localizedFormat);
 
 export function dataFormater(date: string) {
@@ -23,10 +25,12 @@ export let blameFormat: string = "";
 const getConfig = () => {
     dateFormat = workspace.getConfiguration().get("svnlens.currentLine.dateFormat") ?? "ll";
     blameFormat = workspace.getConfiguration().get("svnlens.currentLine.format") ?? "${author}, ${date} • ⧟r${revision}";
+    
 };
 
 
 export function activate(context: ExtensionContext) {
+    logger.activateLogger(context, 'SVN Lens');
     getConfig();
 
     /** */
@@ -41,9 +45,6 @@ export function activate(context: ExtensionContext) {
     /** */
 
     workspace.onDidChangeConfiguration(() => getConfig());
-
-    window.onDidChangeActiveTextEditor(async (ev) => { if (ev) { updateBlameInfo(context, ev.document.uri); } });
-
 
     const decoratorPrepare = (nline: number, path: Uri, color: ThemeColor): DecorationOptions => {
         return {
@@ -63,20 +64,29 @@ export function activate(context: ExtensionContext) {
         };
     };
 
+    window.onDidChangeActiveTextEditor(async (ev) => {
+        if (ev && fileExists(ev.document.uri)) {
+            logger.log("active editor", ev.document.uri.fsPath);
+            updateBlameInfo(context, ev.document.uri);
+        }
+    });
 
     let timeout: NodeJS.Timeout;
     workspace.onDidChangeTextDocument(ev => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-            if (!ev.document.isDirty) {
+            if (fileExists(ev.document.uri) && !ev.document.isDirty) {
                 resetFileName();
                 updateBlameInfo(context, ev.document.uri);
             }
         }, 1000);
     });
 
-
     window.onDidChangeTextEditorSelection(async (ev) => {
+        if (!fileExists(ev.textEditor.document.uri)) {
+            return;
+        }
+
         if (ev.textEditor.document.isDirty) {
             ev.textEditor.setDecorations(svnBlameDecoration, []);
             return;
@@ -96,8 +106,6 @@ export function activate(context: ExtensionContext) {
                 const lineNumber = x.active.line;
                 return decoratorPrepare(lineNumber, path, lightColor)
             }) ?? [];
-
-            console.log(options);
 
             ev.textEditor.setDecorations(svnBlameDecoration, options);
         }

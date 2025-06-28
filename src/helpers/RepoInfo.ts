@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 import { ExtensionContext } from "vscode";
 import { loadCommitInfo } from "./CommitInfo";
 import { xmlToObject } from '../utils';
+import * as logger from "./logger";
 
 export { updateRepoInfo, repoInfo };
 
@@ -23,11 +24,11 @@ function updateRepoInfo(filePath: string, rootPath: string, context: ExtensionCo
         repoInfo.url = result.info.entry.url._text;
         repoInfo.uuid = result.info.entry.repository.uuid._text;
 
-        console.log("repo info", repoInfo);
+        logger.log("repo info", repoInfo);
 
         loadCommitInfo(context);
     }
-    catch (error: Error | any) { console.error(error); }
+    catch (error: Error | any) { logger.error(error); }
 }
 
 

@@ -3,6 +3,7 @@ import { ExtensionContext, Uri, MarkdownString, workspace } from "vscode";
 import { dataFormater } from "../extension";
 import { xmlToObject } from '../utils';
 import { repoInfo } from "./RepoInfo";
+import * as logger from "./logger";
 
 
 export { saveCommitInfo, loadCommitInfo, getCommitInfo };
@@ -56,7 +57,7 @@ const getCommitInfo = (context: ExtensionContext, rev: string, file: Uri): Markd
     if (rev === undefined) return "Uncommitted changes";
 
     if (commitsInfo[rev] === undefined) {
-        console.log("read info", rev);
+        logger.log("read info", rev);
         readCommitInfo(rev, file);
 
         saveCommitInfo(context);

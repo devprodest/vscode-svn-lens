@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.0.3
+
+- Fixed a bug issue #1: It's displaying in the github copilot chat code.
+- Added log out channel "SVN Lens"
+
+
 ## 1.0.2
 
 - Fixed a bug for unversioned lines. The code for this was lost in an update.

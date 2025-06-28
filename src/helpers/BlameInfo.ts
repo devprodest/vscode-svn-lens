@@ -3,8 +3,10 @@ import { ExtensionContext, Uri, workspace } from "vscode";
 import { dataFormater as dataFormatter, blameFormat } from "../extension";
 import { xmlToObject } from '../utils';
 import { updateRepoInfo } from "./RepoInfo";
+import { fileExists } from "./FShelper";
+import * as logger from "./logger";
 
-export { blameLines, updateBlameInfo, resetFileName };
+export { blameLines, updateBlameInfo, resetFileName, resetBlameInfo};
 
 
 type BlameXMLInfo = {
@@ -30,13 +32,24 @@ let fileName: string = "";
 
 const resetFileName = () => fileName = "";
 
+const resetBlameInfo = () => {
+    blameLines = [];
+    resetFileName();
+    logger.log("Blame info reset");
+};
+
 const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
     const filePath = workspace.asRelativePath(file, false);
+
+    if(!fileExists(file)) {
+        resetBlameInfo();
+        return
+    }
 
     if (filePath !== fileName) {
         fileName = filePath;
 
-        console.log("file", filePath);
+        logger.log("file", filePath);
 
         const rootPath = workspace.getWorkspaceFolder(file)?.uri.fsPath || ".";
         updateRepoInfo(filePath, rootPath, context);
@@ -45,8 +58,6 @@ const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
 
             const blameXML = execSync(`svn blame --xml "${filePath}"`, { cwd: rootPath }).toString();
             const entry: BlameXMLInfo[] = xmlToObject<any>(blameXML)?.blame?.target?.entry ?? [];
-
-            console.log("blame lines", entry);
 
             blameLines = entry.map(x => {
 
@@ -71,7 +82,7 @@ const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
                 text: "Last empty line is missing from blame",
             } as BlameInfo);
         }
-        catch (error: Error | any) { console.error(error); }
+        catch (error: Error | any) { logger.error(error); }
     }
 };
 
