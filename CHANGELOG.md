@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.0.4
+
+- Fix additional issue #1: Information about the last opened tracked file was displayed in a file that is not tracked.
+
+
 ## 1.0.3
 
 - Fixed a bug issue #1: It's displaying in the github copilot chat code.

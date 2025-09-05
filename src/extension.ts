@@ -1,31 +1,20 @@
 
 import { ThemeColor, workspace, ExtensionContext, window, commands, Range, Position, Uri, DecorationOptions } from 'vscode';
 import { getCommitInfo } from "./helpers/CommitInfo";
-import { blameLines, resetFileName, updateBlameInfo } from "./helpers/BlameInfo";
+import { blameLines, resetFileName, setBlameFormat, updateBlameInfo } from "./helpers/BlameInfo";
 
-import * as localizedFormat from 'dayjs/plugin/localizedFormat';
-import * as dayjs from 'dayjs';
 import { fileExists } from './helpers/FShelper';
 import * as logger from "./helpers/logger";
 
 
-dayjs.extend(localizedFormat);
-
-export function dataFormater(date: string) {
-    return dayjs(date).format(dateFormat);
-}
-
 
 const svnBlameDecoration = window.createTextEditorDecorationType({});
 
-let dateFormat: string = "";
-export let blameFormat: string = "";
-
-
 const getConfig = () => {
-    dateFormat = workspace.getConfiguration().get("svnlens.currentLine.dateFormat") ?? "ll";
-    blameFormat = workspace.getConfiguration().get("svnlens.currentLine.format") ?? "${author}, ${date} • ⧟r${revision}";
-    
+    const dateFormat = workspace.getConfiguration().get<string>("svnlens.currentLine.dateFormat");
+    const textFormat = workspace.getConfiguration().get<string>("svnlens.currentLine.format");
+
+    setBlameFormat(textFormat, dateFormat);
 };
 
 
@@ -107,7 +96,35 @@ export function activate(context: ExtensionContext) {
                 return decoratorPrepare(lineNumber, path, lightColor)
             }) ?? [];
 
-            ev.textEditor.setDecorations(svnBlameDecoration, options);
+
+            // const info = blameLines.map((x) : DecorationOptions => {
+
+            //     const color = new ThemeColor("vscode.sideBar-background");
+
+            //     return {
+            //         renderOptions: {
+            //             before: {
+            //                 contentText: x.text,
+            //                 margin: "2rem",
+            //                 width: "300px",
+            //                 border: "solid 2px"
+            //             },
+            //             light: { after: { color: color } },
+            //             dark: { after: { color: color } }
+            //         },
+            //         hoverMessage: getCommitInfo(context, x.revision, path),
+            //         range: new Range(
+            //             new Position(x.nline, 0),
+            //             new Position(x.nline, 0),
+            //         ),
+            //     }
+            // }) ?? [];
+
+
+
+
+
+            ev.textEditor.setDecorations(svnBlameDecoration, [...options]);
         }
     });
 }

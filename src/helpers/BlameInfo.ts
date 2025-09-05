@@ -1,12 +1,13 @@
 import { execSync } from "child_process";
 import { ExtensionContext, Uri, workspace } from "vscode";
-import { dataFormater as dataFormatter, blameFormat } from "../extension";
 import { xmlToObject } from '../utils';
 import { updateRepoInfo } from "./RepoInfo";
 import { fileExists } from "./FShelper";
 import * as logger from "./logger";
+import * as localizedFormat from 'dayjs/plugin/localizedFormat';
+import * as dayjs from 'dayjs';
 
-export { blameLines, updateBlameInfo, resetFileName, resetBlameInfo};
+export { blameLines, updateBlameInfo, resetFileName, resetBlameInfo, setBlameFormat, dataFormatter };
 
 
 type BlameXMLInfo = {
@@ -22,15 +23,31 @@ type BlameInfo = {
     author: string,
     date: string,
     revision: string,
-    nline: string
+    nline: number
     text: string,
 };
 
 
+let dateFormat: string = "";
+let blameFormat: string = "";
 let blameLines: BlameInfo[] = [];
 let fileName: string = "";
 
+
+dayjs.extend(localizedFormat);
+
+
+const dataFormatter = (date: string): string => dayjs(date).format(dateFormat);
+
+
+const setBlameFormat = (text: string | undefined, date: string | undefined) => {
+    dateFormat = date ?? "ll";
+    blameFormat = text ?? "${author}, ${date} • ⧟r${revision}";
+}
+
+
 const resetFileName = () => fileName = "";
+
 
 const resetBlameInfo = () => {
     blameLines = [];
@@ -38,10 +55,11 @@ const resetBlameInfo = () => {
     logger.log("Blame info reset");
 };
 
+
 const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
     const filePath = workspace.asRelativePath(file, false);
 
-    if(!fileExists(file)) {
+    if (!fileExists(file)) {
         resetBlameInfo();
         return
     }
@@ -61,7 +79,7 @@ const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
 
             blameLines = entry.map(x => {
 
-                if (x.commit === undefined) return {text: "Uncommitted changes"} as BlameInfo;
+                if (x.commit === undefined) return { text: "Uncommitted changes" } as BlameInfo;
 
                 const date = dataFormatter(x.commit.date._text);
                 const author = x.commit.author._text;
@@ -70,7 +88,7 @@ const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
                     author,
                     date,
                     revision: x.commit._attributes.revision,
-                    nline: x._attributes["line-number"],
+                    nline: +x._attributes["line-number"],
                     text: blameFormat
                         .replace(/(\$\{\s*author\s*\})/, author)
                         .replace(/(\$\{\s*date\s*\})/, date)
@@ -82,7 +100,10 @@ const updateBlameInfo = (context: ExtensionContext, file: Uri) => {
                 text: "Last empty line is missing from blame",
             } as BlameInfo);
         }
-        catch (error: Error | any) { logger.error(error); }
+        catch (error: Error | any) {
+            resetBlameInfo();
+            logger.error(error);
+        }
     }
 };
 

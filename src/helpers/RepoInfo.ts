@@ -4,7 +4,7 @@ import { loadCommitInfo } from "./CommitInfo";
 import { xmlToObject } from '../utils';
 import * as logger from "./logger";
 
-export { updateRepoInfo, repoInfo };
+export { updateRepoInfo, resetRepoInfo, repoInfo };
 
 
 type RepoInfoType = {
@@ -15,8 +15,12 @@ type RepoInfoType = {
 
 const repoInfo: RepoInfoType = { url: "", uuid: "" };
 
+const resetRepoInfo = () => {
+    repoInfo.url = "";
+    repoInfo.uuid = "";
+}
 
-function updateRepoInfo(filePath: string, rootPath: string, context: ExtensionContext) {
+const updateRepoInfo = (filePath: string, rootPath: string, context: ExtensionContext) => {
     try {
         const infoXML = execSync(`svn info --xml "${filePath}"`, { cwd: rootPath }).toString();
         const result = xmlToObject<any>(infoXML);
@@ -28,7 +32,10 @@ function updateRepoInfo(filePath: string, rootPath: string, context: ExtensionCo
 
         loadCommitInfo(context);
     }
-    catch (error: Error | any) { logger.error(error); }
+    catch (error: Error | any) {
+        resetRepoInfo();
+        logger.error(error);
+    }
 }
 
 

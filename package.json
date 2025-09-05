@@ -17,7 +17,7 @@
     },
     "homepage": "https://github.com/devprodest/vscode-svn-lens#readme",
     "icon": "assets/vscode-svnlens.png",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "engines": {
         "vscode": "^1.85.0"
     },
@@ -38,12 +38,6 @@
                 "title": "Inline Blame",
                 "order": 10,
                 "properties": {
-                    "svnlens.currentLine.enabled": {
-                        "type": "boolean",
-                        "default": true,
-                        "scope": "window",
-                        "order": 10
-                    },
                     "svnlens.currentLine.format": {
                         "type": "string",
                         "default": "${author}, ${date} • ⧟r${revision}",
@@ -54,7 +48,7 @@
                     "svnlens.currentLine.dateFormat": {
                         "type": "string",
                         "default": "ll",
-                        "markdownDescription": "Specifies how to format absolute dates (e.g. using the `${date}` token) for the cinline blame annotation. See the dayjs docs for supported formats",
+                        "markdownDescription": "Specifies how to format absolute dates (e.g. using the `${date}` token) for the inline blame annotation. See the dayjs docs for supported formats",
                         "scope": "window",
                         "order": 30
                     }

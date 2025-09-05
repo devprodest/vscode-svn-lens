@@ -1,12 +1,12 @@
 import { execSync } from "child_process";
 import { ExtensionContext, Uri, MarkdownString, workspace } from "vscode";
-import { dataFormater } from "../extension";
 import { xmlToObject } from '../utils';
 import { repoInfo } from "./RepoInfo";
 import * as logger from "./logger";
+import { dataFormatter } from "./BlameInfo";
 
 
-export { saveCommitInfo, loadCommitInfo, getCommitInfo };
+export { readCommitInfo, saveCommitInfo, loadCommitInfo, getCommitInfo };
 
 
 
@@ -22,7 +22,7 @@ const saveCommitInfo = (context: ExtensionContext) => context.globalState.update
 const loadCommitInfo = (context: ExtensionContext) => commitsInfo = context.globalState.get(repoInfo.uuid) ?? {};
 
 
-const makeComitInfoText = (rev: string, { author, date, msg }: CommitInfo): MarkdownString => {
+const makeCommitInfoText = (rev: string, { author, date, msg }: CommitInfo): MarkdownString => {
     const space = "&nbsp;&nbsp;";
     const newline = `\n\n`;
     const separator = `${space}|${space}`;
@@ -46,7 +46,7 @@ const readCommitInfo = (rev: string, file: Uri) => {
     const result = xmlToObject<any>(logXML);
 
     const author = result.log.logentry?.author?._text ?? "";
-    const date = dataFormater(result.log.logentry.date._text);
+    const date = dataFormatter(result.log.logentry.date._text);
     const msg = result.log.logentry.msg._text;
 
     commitsInfo[rev] = { author, date, msg };
@@ -63,7 +63,7 @@ const getCommitInfo = (context: ExtensionContext, rev: string, file: Uri): Markd
         saveCommitInfo(context);
     }
 
-    return makeComitInfoText(rev, commitsInfo[rev]);
+    return makeCommitInfoText(rev, commitsInfo[rev]);
 };
 
 

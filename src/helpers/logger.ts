@@ -1,4 +1,4 @@
-import {ExtensionContext, LogOutputChannel, window} from 'vscode';
+import { ExtensionContext, LogOutputChannel, window } from 'vscode';
 
 
 let logChannel: LogOutputChannel;
@@ -8,12 +8,12 @@ export { activateLogger, log, error };
 
 
 
-function activateLogger(context: ExtensionContext, logChannelName: string) {
+const activateLogger = (context: ExtensionContext, logChannelName: string) => {
     logChannel = window.createOutputChannel(logChannelName, { log: true });
     context.subscriptions.push(logChannel);
 }
 
-function log(message: string, ...args: any[]) {
+const log = (message: string, ...args: any[]) => {
     if (logChannel) {
         logChannel.appendLine(message);
         if (args.length > 0) {
@@ -24,7 +24,7 @@ function log(message: string, ...args: any[]) {
     }
 }
 
-function error(message: string, ...args: any[]) {
+const error = (message: string, ...args: any[]) => {
     if (logChannel) {
         logChannel.appendLine(`Error: ${message}`);
         if (args.length > 0) {
